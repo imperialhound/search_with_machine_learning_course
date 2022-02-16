@@ -252,6 +252,7 @@
           },
           "longDescription" : {
             "type" : "text",
+            "analyzer": "english",
             "fields" : {
               "keyword" : {
                 "type" : "keyword",
@@ -288,6 +289,7 @@
           },
           "name" : {
             "type" : "text",
+            "analyzer": "english",
             "fields" : {
               "keyword" : {
                 "type" : "keyword",
@@ -332,14 +334,8 @@
             }
           },
           "regularPrice" : {
-            "type" : "text",
-            "fields" : {
-              "keyword" : {
-                "type" : "keyword",
-                "ignore_above" : 256
-              }
-            }
-          },
+            "type" : "float"
+            },
           "relatedProducts" : {
             "type" : "text",
             "fields" : {
@@ -408,6 +404,7 @@
           },
           "shortDescription" : {
             "type" : "text",
+            "analyzer": "english",
             "fields" : {
               "keyword" : {
                 "type" : "keyword",
