@@ -8,67 +8,35 @@
         "type" : "date"
       },
       "@version" : {
-        "type" : "text",
-        "fields" : {
-          "keyword" : {
-            "type" : "keyword",
-            "ignore_above" : 256
-          }
-        }
+        "type" : "long"
       },
       "category" : {
-        "type" : "text",
-        "fields" : {
-          "keyword" : {
-            "type" : "keyword",
-            "ignore_above" : 256
-          }
-        }
+        "type" : "keyword",
+        "ignore_above" : 512
       },
       "click_time" : {
-        "type" : "text",
-        "fields" : {
-          "keyword" : {
-            "type" : "keyword",
-            "ignore_above" : 256
-          }
-        }
+        "type" : "date",
+        "format": "yyyy-MM-dd HH:mm:ss.SSS||ordinal_date_time||strict_date_optional_time||epoch_millis"
       },
       "query" : {
         "type" : "text",
         "fields" : {
           "keyword" : {
             "type" : "keyword",
-            "ignore_above" : 256
+            "ignore_above" : 2048
           }
         }
       },
       "query_time" : {
-        "type" : "text",
-        "fields" : {
-          "keyword" : {
-            "type" : "keyword",
-            "ignore_above" : 256
-          }
-        }
+        "type" : "date",
+        "format": "yyyy-MM-dd HH:mm:ss.SSS||ordinal_date_time||strict_date_optional_time||epoch_millis"
       },
       "sku" : {
-        "type" : "text",
-        "fields" : {
-          "keyword" : {
-            "type" : "keyword",
-            "ignore_above" : 256
-          }
-        }
+        "type" : "long"
       },
       "user" : {
-        "type" : "text",
-        "fields" : {
-          "keyword" : {
-            "type" : "keyword",
-            "ignore_above" : 256
-          }
-        }
+        "type" : "keyword",
+        "ignore_above" : 1024
       }
     }
   }
