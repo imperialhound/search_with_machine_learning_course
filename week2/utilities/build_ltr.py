@@ -17,16 +17,26 @@ import pandas as pd
 import search_utils as su
 import xgb_utils as xgbu
 from opensearchpy import OpenSearch
+import warnings
 
 
 
 
 if __name__ == "__main__":
+
+    # Ignore future warning because they are annoying, yes I know that my code is ancient
+
+    warnings.filterwarnings("ignore")
+
+    # SET BASE CREDENTIALS 
     host = 'localhost'
     port = 9200
     auth = ('admin', 'admin')  # For testing only. Don't store credentials in code.
     parser = argparse.ArgumentParser(description='Build LTR.')
     # TODO: setup argparse requirements/dependencies to better enforce arguments that require other arguments
+
+
+    # ARGUMENTS FOR GENERAL INFO 
     general = parser.add_argument_group("general")
     general.add_argument("-i", '--index', default="bbuy_products",
                          help='The name of the main index to search')
@@ -42,12 +52,16 @@ if __name__ == "__main__":
                          help='The path to the CSV file containing all click/session data.  This is required if doing --generate_impressions or --xgb_test')
     general.add_argument("--output_dir", default="output", help="the directory to output all files to")
 
+
+    # ARGUMENTS FOR PREPERATION OF DATA 
     dp_group = parser.add_argument_group("LTR Data Prep")
     dp_group.add_argument("--ltr_terms_field", default="_id",
                           help="If --synthesize our data, this should be set to 'sku'")
     dp_group.add_argument('--normalize_json',
                           help='A path to a JSON map of LTR feature-normalizer type pairs. If unset, data normalization will not happen.  See week2/conf/normalize_types.json for an example')
 
+
+    ## IMPRESSIONS 
     dp_group.add_argument('--synthesize', action="store_true",
                           help='if set, along with --generate_impressions, creates impressions based on an implied ranking in the click logs.  Writes to --impressions_file.')
     dp_group.add_argument('--generate_impressions', action="store_true",
@@ -63,6 +77,8 @@ if __name__ == "__main__":
     dp_group.add_argument("-r", '--impressions_file', default="impressions.csv",
                           help='Where to write the ranks/features CSV file to under --output_dir.  Output is written from a Pandas data frame')
 
+
+    # ARGUMENTS FOR CREATION OF FEATURESETS and MODEL STORE
     ltr_group = parser.add_argument_group("LTR Store Creation and Features")
     ltr_group.add_argument("-c", '--create_ltr_store', action="store_true",
                            help='Set the flag to create the LTR store.  If one exists, it will be deleted')
@@ -75,6 +91,8 @@ if __name__ == "__main__":
     ltr_group.add_argument("-u", '--upload_ltr_model', action="store_true",
                            help='Upload XGB LTR model under the given featureset. Requires --featureset_name and --xgb_model')
 
+
+    # ARGUMENTS FOR XGB MODEL CREATION
     xgb_group = parser.add_argument_group("XGB Model Training and Testing")
     xgb_group.add_argument("-x", '--xgb',
                            help='Train an XGB Boost model using the training file given')
@@ -103,6 +121,8 @@ if __name__ == "__main__":
     xgb_group.add_argument("--xgb_rescore_query_weight", default=2, type=float,
                            help="For the rescore query, how much weight to give the rescore query.")
 
+
+    # ARGUMENTS FOR ANALYZING RESULTS
     analyze_group = parser.add_argument_group("Analyze Test Results")
     analyze_group.add_argument("--analyze", action="store_true",
                                help="Calculate a variety of stats and other things about the results.  Uses --xgb_test_output")
@@ -111,12 +131,16 @@ if __name__ == "__main__":
                                help="Run the queries from LTR queries that performed WORSE than the non-LTR query through explains and output the values.  Expensive.  Uses --xgb_test_output.  Outputs --output_dir as simple_ltr_explains.csv and ltr_hand_tuned_explains.csv.")
     analyze_group.add_argument("--max_explains", type=int, default=100, help="The maximum number of explains to output")
 
+
+    # ARGUMENTS FOR CLICK MODELS
     click_group = parser.add_argument_group("Click Models")
     click_group.add_argument("--click_model", choices=["ctr", "binary", "heuristic"], default="ctr",
                              help='Simple Click-through-rate model')
     click_group.add_argument("--downsample", action="store_true",
                              help='Downsample whatever is most prevelant to create a more balanced training set.')
 
+
+    # ARGUMENTS FOR SPLITTING TRAINING AND TESTING DATASET
     split_group = parser.add_argument_group("Train/Test Splits")
     split_group.add_argument("--split_input",
                              help="If specified, will split the given file into training and testing, writing it to the file name given as an argument into --split_train and --split_test")
@@ -129,7 +153,8 @@ if __name__ == "__main__":
     split_group.add_argument("--split_test_rows", type=int,
                              help="The total number of rows from the input file to put in the test split.  Helpful for testing code, but likely won't produce good results since it won't have insights into clicks.  See --xgb_test_num_queries.")
 
-    # Some handy utilities
+
+    # ARGUMENTS FOR UTILITIES 
     util_group = parser.add_argument_group("Utilities")
     util_group.add_argument("--lookup_query",
                             help="Given a query in --all_clicks, dump out all the product info for items that got clicks")
@@ -209,6 +234,7 @@ if __name__ == "__main__":
             the_feature_set = json.load(json_file)
             rsp = ltr.post_featureset(featureset_path, the_feature_set, auth)
             print("Featureset Creation: %s" % rsp)
+            
     # Upload an LTR model
     if args.upload_ltr_model:
         # delete any old model first

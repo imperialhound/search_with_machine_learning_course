@@ -7,9 +7,23 @@ def binary_func(x):
         return 1
     return 0
 
-def step(x):
-    print("IMPLEMENT ME: step(x) a step function with a simple heuristic that buckets grades")
-    return rng.choice([0,0.5, 1.0])
+def step(x: float) -> float:
+    
+
+    if x < 0.05:
+        value = 0
+    
+    elif 0.05 <= x < 0.10:
+        value = 0.50
+
+    elif 0.10 <= x < 0.30:
+        value = 0.75
+    
+    else:
+         value = 1
+
+    return value
+    
 
 
 rng = np.random.default_rng(123456)
@@ -28,7 +42,8 @@ def apply_click_model(data_frame, click_model_type="binary", downsample=True):
             data_frame = down_sample_continuous(data_frame)
     elif click_model_type == "heuristic":
         data_frame["grade"] = (data_frame["clicks"]/data_frame["num_impressions"]).fillna(0).apply(lambda x: step(x))
-        print("IMPLEMENT ME: apply_click_model(): downsampling")
+        if downsample:
+            data_frame = down_sample_buckets(data_frame)
     return data_frame
 
 # https://stackoverflow.com/questions/55119651/downsampling-for-more-than-2-classes
