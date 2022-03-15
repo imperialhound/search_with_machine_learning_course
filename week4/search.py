@@ -10,6 +10,17 @@ from week4.opensearch import get_opensearch
 import week4.utilities.query_utils as qu
 import week4.utilities.ltr_utils as lu
 
+import string
+import nltk
+nltk.download('punkt')
+from nltk.stem import SnowballStemmer
+stemmer = SnowballStemmer("english")
+
+def process_query(query):
+    processed_query = ''.join([i for i in query.lower() if i not in string.punctuation])
+    processed_tokens = nltk.word_tokenize(processed_query)
+    return " ".join([stemmer.stem(token) for token in processed_tokens])
+
 bp = Blueprint('search', __name__, url_prefix='/search')
 
 
@@ -57,8 +68,16 @@ def process_filters(filters_input):
     return filters, display_filters, applied_filters
 
 def get_query_category(user_query, query_class_model):
-    print("IMPLEMENT ME: get_query_category")
-    return None
+
+    # Create empty list to populate with categories
+    category_list=[]
+    processed_query = process_query(user_query)
+    categories, scores = query_class_model.predict(processed_query, 5)
+    cat_no_labels = [cat.replace("__label__", "") for cat in categories]
+    for cat,score in zip(cat_no_labels, scores):
+         if score > 0.50:
+             category_list.append(cat)
+    return category_list
 
 
 @bp.route('/query', methods=['GET', 'POST'])
@@ -137,8 +156,8 @@ def query():
 
     query_class_model = current_app.config["query_model"]
     query_category = get_query_category(user_query, query_class_model)
-    if query_category is not None:
-        print("IMPLEMENT ME: add this into the filters object so that it gets applied at search time.  This should look like your `term` filter from week 1 for department but for categories instead")
+    if user_query!="*" and query_category:
+        query_obj["query"]["bool"]["filter"].append({"terms": {"categoryPathIds": query_category}}) 
     #print("query obj: {}".format(query_obj))
     response = opensearch.search(body=query_obj, index=current_app.config["index_name"], explain=explain)
     # Postprocess results here if you so desire

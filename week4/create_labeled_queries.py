@@ -4,10 +4,24 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 import numpy as np
 import csv
-
-# Useful if you want to perform stemming.
+import string
+import pandas as pd
 import nltk
-stemmer = nltk.stem.PorterStemmer()
+nltk.download('punkt')
+
+from nltk.stem import SnowballStemmer
+stemmer = SnowballStemmer("english")
+
+def process_query(query):
+    processed_query = ''.join([i for i in query.lower() if i not in string.punctuation])
+    processed_tokens = nltk.word_tokenize(processed_query)
+    return " ".join([stemmer.stem(token) for token in processed_tokens])
+
+
+def crawl_category_tree(category, cat_length):
+    if cat_length < min_queries and category != root_category_id:
+       return parents_df[parents_df.category == category]['parent'].iloc[0] 
+    return category    
 
 categories_file_name = r'/workspace/datasets/product_data/categories/categories_0001_abcat0010000_to_pcmcat99300050000.xml'
 
@@ -48,9 +62,15 @@ parents_df = pd.DataFrame(list(zip(categories, parents)), columns =['category', 
 df = pd.read_csv(queries_file_name)[['category', 'query']]
 df = df[df['category'].isin(categories)]
 
-# IMPLEMENT ME: Convert queries to lowercase, and optionally implement other normalization, like stemming.
 
-# IMPLEMENT ME: Roll up categories to ancestors to satisfy the minimum number of queries per category.
+df['query'] = df['query'].apply(process_query)
+df['cat_size'] = df.groupby('category')['query'].transform('count')
+
+# If category is below minimum then crawl up category tree 
+while df['cat_size'].min() < min_queries:
+    df['category'] = df.apply(lambda row: crawl_category_tree(row.category, row.cat_size), axis=1)
+    df['cat_size'] = df.groupby('category')['query'].transform('count')
+print("after: ",df.category.nunique())
 
 # Create labels in fastText format.
 df['label'] = '__label__' + df['category']
